@@ -221,3 +221,5 @@ pip-log.txt
 
 *.sublime-project
 *.sublime-workspace
+src/SDL2.dll
+src/sdltest.exe
