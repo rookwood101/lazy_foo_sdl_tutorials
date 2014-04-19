@@ -8,52 +8,63 @@ using namespace std;
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+SDL_Window* g_window = NULL;
+SDL_Surface* g_screen_surface = NULL;
+SDL_Surface* g_hello_world = NULL;
+
+void init() {
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		throw runtime_error(SDL_GetError());
+	}
+
+	g_window = SDL_CreateWindow("SDL Tutorial - Hello World", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+
+	if (g_window == NULL) {
+		throw runtime_error(SDL_GetError());
+	}
+
+	g_screen_surface = SDL_GetWindowSurface(g_window);
+
+	return;
+}
+
+void loadMedia() {
+	g_hello_world = SDL_LoadBMP("hello_world.bmp");
+
+	if(g_hello_world == NULL) {
+		throw runtime_error(SDL_GetError());
+	}
+
+	return;
+}
+
+void close() {
+	SDL_FreeSurface(g_hello_world);
+	g_hello_world = NULL;
+
+	SDL_DestroyWindow(g_window); //also handles destruction of screen surface
+	g_window = NULL;
+	g_screen_surface = NULL;
+
+	SDL_Quit();
+}
+
 int main(int argc, char* args[]) {
-	
-	//window we're rendering to
-	SDL_Window* window = NULL;
+	init();
+	loadMedia();
 
-	//the surface contained by the window
-	SDL_Surface* screen_surface = NULL;
+	SDL_BlitSurface(g_hello_world, NULL, g_screen_surface, NULL);
+	SDL_UpdateWindowSurface(g_window);
 
-	//initialise sdl
-	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-		string error_message = "SDL could not initialise: \n\t";
-		error_message += SDL_GetError();
-		throw runtime_error(error_message);
-	}
-
-	//create window
-	window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-
-	if(window == NULL) {
-		string error_message = "SDL window could not be created: \n\t";
-		error_message += SDL_GetError();
-		throw runtime_error(error_message);
-	}
-
-	//get window surface
-	screen_surface = SDL_GetWindowSurface(window);
-
-	//fill it white
-	SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 0xFF, 0x0, 0x0));
-
-	//update the window surface
-	SDL_UpdateWindowSurface(window);
-
-	//wait
-	SDL_Event evt;
+	SDL_Event event;
 	bool program_running = true;
-	while(program_running)
-	{
-		SDL_WaitEvent(&evt);
-		if(evt.type == SDL_QUIT)
+	while(program_running) {
+		SDL_WaitEvent(&event);
+		if(event.type == SDL_QUIT)
 			program_running = false;
 	}
 
-	//destroy window
-	SDL_DestroyWindow(window);
-	SDL_Quit();
+	close();
 
 	return 0;
 }
