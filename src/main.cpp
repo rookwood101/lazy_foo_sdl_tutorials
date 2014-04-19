@@ -59,7 +59,7 @@ int main(int argc, char* args[]) {
 	SDL_Event event;
 	bool program_running = true;
 	while(program_running) {
-		SDL_WaitEvent(&event);
+		SDL_WaitEvent(&event); //preferable to poll event - uses basically no CPU
 		if(event.type == SDL_QUIT)
 			program_running = false;
 	}
