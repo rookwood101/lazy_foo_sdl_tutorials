@@ -20,7 +20,7 @@ void init() {
 		throw runtime_error(SDL_GetError());
 	}
 
-	g_window = SDL_CreateWindow("SDL Tutorial - Hello World", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	g_window = SDL_CreateWindow("SDL Tutorial - Hello World", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE|SDL_WINDOW_SHOWN);
 
 	if (g_window == NULL) {
 		throw runtime_error(SDL_GetError());
@@ -32,13 +32,22 @@ void init() {
 }
 
 SDL_Surface* loadSurface(string path) {
-	SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
+	SDL_Surface* optimised_surface = NULL;
+	SDL_Surface* loaded_surface = SDL_LoadBMP(path.c_str());
 
-	if (loadedSurface == NULL) {
+	if (loaded_surface == NULL) {
 		throw runtime_error(SDL_GetError());
 	}
 
-	return loadedSurface;
+	optimised_surface = SDL_ConvertSurface(loaded_surface, g_screen_surface->format, 0);
+
+	if (optimised_surface == NULL) {
+		throw runtime_error(SDL_GetError());
+	}
+
+	SDL_FreeSurface(loaded_surface);
+
+	return optimised_surface;
 }
 
 void loadMedia() {
@@ -72,9 +81,25 @@ int main(int argc, char* args[]) {
 	loadMedia();
 
 	SDL_Event event;
+
+	SDL_Rect screen_rect;
+	screen_rect.x = 0;
+	screen_rect.y = 0;
+	screen_rect.w = SCREEN_WIDTH;
+	screen_rect.h = SCREEN_HEIGHT;
+
+	bool resized = false;
 	bool program_running = true;
+
 	while(program_running) {
-		SDL_BlitSurface(g_key_press_surfaces[g_current_surface], NULL, g_screen_surface, NULL);
+		if(resized) {
+			SDL_FreeSurface(g_screen_surface);
+			g_screen_surface = SDL_GetWindowSurface(g_window);
+			resized = false;
+		}
+		
+		SDL_BlitScaled(g_key_press_surfaces[g_current_surface], NULL, g_screen_surface, &screen_rect);
+
 		SDL_UpdateWindowSurface(g_window);
 
 		SDL_WaitEvent(&event); //preferable to poll event - uses basically no CPU
@@ -91,6 +116,16 @@ int main(int argc, char* args[]) {
 		else if(event.type == SDL_KEYUP) {
 			if(g_key_press_surfaces.find(event.key.keysym.sym) != g_key_press_surfaces.end()) {
 				g_current_surface = -1;
+			}
+		}
+
+		else if(event.type == SDL_WINDOWEVENT) {
+			switch (event.window.event) {
+				case SDL_WINDOWEVENT_RESIZED:
+					resized = true;
+					screen_rect.w = event.window.data1;
+					screen_rect.h = event.window.data2;
+					break;
 			}
 		}
 	}
