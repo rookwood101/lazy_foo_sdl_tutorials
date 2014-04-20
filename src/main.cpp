@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 using namespace std;
 
@@ -26,6 +27,11 @@ void init() {
 		throw runtime_error(SDL_GetError());
 	}
 
+	int img_flags = IMG_INIT_PNG;
+	if (!(IMG_Init(img_flags) & img_flags)) {
+		throw runtime_error(IMG_GetError());
+	}
+
 	g_screen_surface = SDL_GetWindowSurface(g_window);
 
 	return;
@@ -33,10 +39,10 @@ void init() {
 
 SDL_Surface* loadSurface(string path) {
 	SDL_Surface* optimised_surface = NULL;
-	SDL_Surface* loaded_surface = SDL_LoadBMP(path.c_str());
+	SDL_Surface* loaded_surface = IMG_Load(path.c_str());
 
 	if (loaded_surface == NULL) {
-		throw runtime_error(SDL_GetError());
+		throw runtime_error(IMG_GetError());
 	}
 
 	optimised_surface = SDL_ConvertSurface(loaded_surface, g_screen_surface->format, 0);
@@ -51,11 +57,11 @@ SDL_Surface* loadSurface(string path) {
 }
 
 void loadMedia() {
-	g_key_press_surfaces[-1] = loadSurface("press.bmp");
-	g_key_press_surfaces[SDLK_UP] = loadSurface("up.bmp");
-	g_key_press_surfaces[SDLK_DOWN] = loadSurface("down.bmp");
-	g_key_press_surfaces[SDLK_LEFT] = loadSurface("left.bmp");
-	g_key_press_surfaces[SDLK_RIGHT] = loadSurface("right.bmp");
+	g_key_press_surfaces[-1] = loadSurface("press.png");
+	g_key_press_surfaces[SDLK_UP] = loadSurface("up.png");
+	g_key_press_surfaces[SDLK_DOWN] = loadSurface("down.png");
+	g_key_press_surfaces[SDLK_LEFT] = loadSurface("left.png");
+	g_key_press_surfaces[SDLK_RIGHT] = loadSurface("right.png");
 
 	return;
 }
